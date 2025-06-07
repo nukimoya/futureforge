@@ -1,0 +1,24 @@
+{
+    "development": {
+      "username": "futureforge_user",
+      "password": "password",
+      "database": "futureforge",
+      "host": "localhost",
+      "dialect": "postgres"
+    },
+    "test": {
+      "username": "futureforge_user",
+      "password": "password",
+      "database": "futureforge",
+      "host": "127.0.0.1",
+      "dialect": "postgres"
+    },
+    "production": {
+      "username": "futureforge_user",
+      "password": "password",
+      "database": "futureforge",
+      "host": "127.0.0.1",
+      "dialect": "postgres"
+    }
+  }
+  
