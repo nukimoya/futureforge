@@ -1,4 +1,4 @@
-const User = require('../model/user');
+const {User} = require('../model/user');
 const TestSession = require('../model/testSession');
 const ProfileSummary = require('../model/profileSummary');
 const CareerRecommendation = require('../model/careerRecommendation');

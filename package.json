@@ -1,19 +1,27 @@
 {
   "name": "futureforge",
   "version": "1.0.0",
-  "description": "",
+  "description": "AI-powered career guidance API built with Node.js, Express, and PostgreSQL. Handles authentication, stores user test sessions and responses, communicates with Groq's LLM to generate personalized career recommendations, and manages feedback data. Built with Sequelize ORM",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "futureforge",
+    "Samuel",
+    "Adelakun",
+    "AI",
+    "Career",
+    "recommendations"
+  ],
+  "author": "Samuel Adelakun",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",

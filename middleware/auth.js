@@ -1,26 +1,19 @@
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
+const jwt = require('jsonwebtoken');
 
-const auth = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-
+const authMiddleware = (req, res, next) => {
+  const token = req.cookies.auth_token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+  
   if (!token) {
-    return res.status(401).json({ message: "Unauthorized: No token provided" });
+    return res.status(401).json({ error: 'No token provided' });
   }
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded Token:", decoded); // ✅ Log decoded user data
-    req.user = decoded;
-
-    if (!req.user.role) {
-      return res.status(403).json({ message: "Forbidden: No role found in token" });
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: 'Invalid token' });
     }
-
+    req.user = decoded; // attach decoded user info to request object
     next();
-  } catch (error) {
-    return res.status(401).json({ message: "Unauthorized: Invalid token" });
-  }
+  });
 };
 
-module.exports = auth;
+module.exports = authMiddleware;
