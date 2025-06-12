@@ -31,7 +31,6 @@ const signinUser = async (req, res) => {
     const { email, password } = req.body;
     const trimmedEmail = email?.trim().toLowerCase();
 
-    // Basic validation
     if (!trimmedEmail || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
@@ -43,17 +42,22 @@ const signinUser = async (req, res) => {
 
     const isPasswordValid = user ? await bcrypt.compare(password, user.password) : false;
 
-    // Delay response to mitigate timing attacks
+    // Add a slight delay to prevent brute-force timing attacks
     const elapsed = Date.now() - startTime;
     await new Promise(resolve => setTimeout(resolve, Math.max(0, LOGIN_DELAY - elapsed)));
 
     if (!user || !isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ msg: 'Invalid email or password' });
     }
 
     if (!user.is_confirmed) {
-      return res.status(403).json({
-        error: 'Email not confirmed',
+      return res.status(200).json({
+        requiresVerification: true,
+        data: {
+          user: {
+            email: user.email
+          }
+        },
         msg: 'Please confirm your email before logging in'
       });
     }
@@ -64,17 +68,21 @@ const signinUser = async (req, res) => {
       role: user.role
     });
 
-    // Set token as httpOnly cookie
+    // Set token as cookie (optional for frontend use)
     res.cookie('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 1 day
+      maxAge: 24 * 60 * 60 * 1000
     });
 
     return res.status(200).json({
-      msg: 'Sign-in successful',
-      user: formatUserResponse(user)
+      data: {
+        user: formatUserResponse(user),
+        token
+      },
+      requiresVerification: false,
+      msg: 'Sign-in successful'
     });
 
   } catch (error) {
@@ -87,6 +95,7 @@ const signinUser = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 // Export as array for use with route middleware
 module.exports = {

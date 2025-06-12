@@ -15,4 +15,10 @@ router.post("/confirm-code", confirm_code)
 router.post("/resend-code", resendCodeLimiter, resend_code)
 router.post("/login", ...signinUser)
 
+router.post('/logout', (req, res) => {
+    res.clearCookie('auth_token');
+    res.status(200).json({ msg: 'Logged out successfully' });
+  });
+  
+
 module.exports = router;

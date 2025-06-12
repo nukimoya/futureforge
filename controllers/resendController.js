@@ -23,8 +23,8 @@ const resendCode = async (req, res) => {
     const newCode = crypto.randomInt(100000, 999999).toString();
     const newExpiry = new Date(Date.now() + 60 * 1000); // 1 min
 
-    user.confirmationCode = newCode;
-    user.confirmationCodeExpires = newExpiry;
+    user.confirmation_code = newCode;
+    user.confirmation_code_expires = newExpiry;
     await user.save();
 
     await sendConfirmationEmail(user.email, newCode);
