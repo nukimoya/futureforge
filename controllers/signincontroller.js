@@ -21,6 +21,7 @@ const formatUserResponse = (user) => ({
   username: user.name,
   email: user.email,
   role: user.role,
+  takentest: user.hasTakenAssessment,
 });
 
 // Sign-in Controller
@@ -37,7 +38,7 @@ const signinUser = async (req, res) => {
 
     const user = await User.findOne({
       where: { email: trimmedEmail },
-      attributes: ['id', 'name', 'email', 'password', 'role', 'is_confirmed']
+      attributes: ['id', 'name', 'email', 'password', 'role', 'hasTakenAssessment', 'is_confirmed']
     });
 
     const isPasswordValid = user ? await bcrypt.compare(password, user.password) : false;
