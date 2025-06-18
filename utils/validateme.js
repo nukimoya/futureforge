@@ -39,4 +39,4 @@ const validatePassword = (password) => {
     return null;
 };
 
-module.exports = { validatePassword, validateUsername};
+module.exports = { validatePassword, validateUsername };

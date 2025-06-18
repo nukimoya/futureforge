@@ -1,5 +1,5 @@
 const express = require('express');
-const { startTestSession, getAptitudeQuestions, submitAptitudeTest, resetTest, getUserActivities, getUserStats, getCareerRecommendationsFromGroq } = require('../controllers/testController');
+const { startTestSession, getAptitudeQuestions, submitAptitudeTest, latestRecommendation, resetTest, getUserActivities, getUserStats } = require('../controllers/testController');
 const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
@@ -10,6 +10,6 @@ router.post("/submit-test", authMiddleware, submitAptitudeTest);
 router.post("/resetTest", authMiddleware, resetTest);
 router.post("/userActivities", authMiddleware, getUserActivities);
 router.post("/userStats", authMiddleware, getUserStats);
-router.post("/recommendations", getCareerRecommendationsFromGroq);
+router.get("/recommendations", authMiddleware, latestRecommendation);
 
 module.exports = router;

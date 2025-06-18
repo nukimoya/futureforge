@@ -19,10 +19,12 @@ const TestSession = sequelize.define('TestSession', {
   },
   completedAt: {
     type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: null,
     field: 'completed_at'
   }
 }, {
-  timestamps: true,
+  timestamps: false,
   tableName: 'test_sessions'
 });
 
