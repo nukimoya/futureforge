@@ -1,12 +1,15 @@
 const { sequelize } = require('../config/database');
 const { Groq } = require('groq-sdk');
+
 const { User } = require('../model/user');
 const AptitudeQuestion = require('../model/aptitudeQuestion');
 const Response = require('../model/response');
 const TestSession = require('../model/testSession');
 const CareerRecommendation = require('../model/careerRecommendation')
+
 const generatePersonalityProfile = require('../utils/personalityProfile')
 const generateInterestSummary = require('../utils/interestSummary')
+const logActivity = require('../utils/logActivity')
 
 require('dotenv').config();
 
@@ -16,7 +19,6 @@ const groq = new Groq({
 
 const getAptitudeQuestions = async (req, res) => {
   try {
-    // Optional: add pagination or filtering in the future
     const questions = await AptitudeQuestion.findAll({
       attributes: [
         'id',
@@ -70,6 +72,7 @@ const startTestSession = async (req, res) => {
 
     const newSession = await TestSession.create({ userId }, { transaction: t });
     await t.commit();
+    await logActivity(userId, 'test_started', { sessionId: newSession.id });
 
     console.log(`[INFO] New test session created for user ${userId}: ${newSession.id}`);
     return res.status(201).json({
@@ -135,6 +138,7 @@ const submitAptitudeTest = async (req, res) => {
       { completedAt: new Date() },
       { where: { id: sessionId }, transaction }
     );
+    await logActivity(userId, 'test_completed', { sessionId: session.id });
 
     // 5. Commit transaction before calling external AI
     await transaction.commit();
@@ -197,7 +201,7 @@ IMPORTANT: Return only a JSON array. No explanations or extra text.
 
 You are an expert AI career counselor and personalized learning advisor.
 
-Based on the user's aptitude test answers, personality profile, and interest summary, generate **3 personalized career development tracks**.
+Based on the user's aptitude test answers, personality profile, and interest summary, generate **4 personalized career development tracks**.
 
 Each object must include:
 - type: "career" | "education" | "certification"
@@ -217,7 +221,7 @@ User Answers: ${userAnswers}
 Personality Profile: ${personalityProfile}
 Interest Summary: ${interestSummary}
 
-Respond in this **exact JSON format**:
+Respond in this **exact JSON format** but order it in order of highest score:
 
 [
   {
@@ -331,6 +335,7 @@ const latestRecommendation = async (req, res) => {
     // 3. Build user profile summary (e.g., interest & personality info)
     const profile = await buildUserSummary(userId);
 
+
     // 4. Send response
     return res.json({
       profile,
@@ -345,6 +350,16 @@ const latestRecommendation = async (req, res) => {
   }
 };
 
+const reportDownload = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    await logActivity(userId, 'report_downloaded');
+    return res.status(200).json({ message: 'Report download logged' });
+  } catch (err) {
+    console.error('Failed to log report download:', err);
+    return res.status(500).json({ error: 'Failed to log report download' });
+  }
+};
 
 const resetTest = async (req, res) => {
     try {
@@ -357,43 +372,67 @@ const resetTest = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
-
-const getUserActivities = async (req, res) => {
-    const userId = req.user.id;
   
-    const sessions = await TestSession.findAll({
-      where: { user_id: userId },
-      include: [{ model: Response }],
+const getUserStats = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const testsTaken = await TestSession.count({
+      where: { userId: userId }
+    });
+
+    const lastSession = await TestSession.findOne({
+      where: { userId },
       order: [['startedAt', 'DESC']]
     });
-  
-    const activities = sessions.map((session) => ({
-      sessionId: session.id,
-      startedAt: session.startedAt,
-      completedAt: session.completedAt,
-      responseCount: session.Responses.length
-    }));
-  
-    return res.json({ activities });
-};
-  
+    
+    let timeSinceLastTest = null;
+    
+    if (lastSession?.startedAt) {
+      const now = new Date();
+      const startedAt = new Date(lastSession.startedAt);
+      const diffMs = now - startedAt;
+    
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffHours / 24);
+    
+      if (diffDays >= 1) {
+        timeSinceLastTest = `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+      } else {
+        timeSinceLastTest = `${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
+      }
+    }
 
-const getUserStats = async (req, res) => {
-    const userId = req.user.id;
-  
-    const totalSessions = await TestSession.count({ where: { userId: userId } });
-    const lastSession = await TestSession.findOne({
-      where: { user_id: userId },
-      order: [['startedAAt', 'DESC']]
+    const averageScoreResult = await CareerRecommendation.findOne({
+      where: { userId, type: 'career' },
+      attributes: [
+        [sequelize.fn('ROUND', sequelize.fn('AVG', sequelize.col('score')), 2), 'avgScore']
+      ],
+      raw: true
     });
-  
-    const totalResponses = await Response.count({ where: { userId: userId } });
-  
+    
+    const averageScore = averageScoreResult?.avgScore ?? 0;
+
+    const distinctCareerCount = await CareerRecommendation.count({
+      where: {
+        userId: userId,
+        type: 'career'
+      },
+      distinct: true,
+      col: 'title' // Ensures duplicates by title are not double-counted
+    });
+
     return res.json({
-      totalSessions,
-      totalResponses,
-      lastTestDate: lastSession?.startedAt || null
+      testsTaken,
+      averageScore,
+      timeSinceLastTest,
+      distinctCareerCount,
     });
+
+  } catch (error) {
+    console.error("❌ Failed to get user stats:", error);
+    return res.status(500).json({ error: "Server error while fetching stats" });
+  }
 };
   
 
@@ -402,7 +441,7 @@ module.exports = {
     getAptitudeQuestions,
     submitAptitudeTest,
     latestRecommendation,
+    reportDownload,
     resetTest,
-    getUserActivities,
     getUserStats,
 }

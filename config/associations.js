@@ -5,10 +5,14 @@ const CareerRecommendation = require('../model/careerRecommendation');
 const Feedback = require('../model/feedback');
 const Response = require('../model/response')
 const Career = require('../model/career')
+const UserActivity = require('../model/userActivity')
 
 function setupAssociations() {
   User.hasMany(TestSession, { foreignKey: 'userId', as: 'testSessions' });
   TestSession.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  User.hasMany(UserActivity, { foreignKey: 'userId' });
+  UserActivity.belongsTo(User, { foreignKey: 'userId' });
   
   TestSession.hasMany(Response, { foreignKey: 'testSessionId', as: 'responses' });
   Response.belongsTo(TestSession, { foreignKey: 'testSessionId', as: 'testSession' });
@@ -27,7 +31,6 @@ function setupAssociations() {
   
   CareerRecommendation.hasMany(Feedback, { foreignKey: 'careerRecommendationId', as: 'feedbacks' });
   Feedback.belongsTo(CareerRecommendation, { foreignKey: 'careerRecommendationId', as: 'careerRecommendation' });
-  
-  }
+}
 
 module.exports = setupAssociations;

@@ -7,7 +7,6 @@ const router = express.Router();
 
 router.use("/auth", authRoutes);
 router.use("/api", testRoutes, careerRoutes);
-// router.use("/learner", learnerRoutes);
 
 
 module.exports = router;
