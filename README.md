@@ -5,7 +5,7 @@
 </blockquote>
 
 <p align="center">
-  <img src="https://your-screenshot-url.com" alt="FutureForge Screenshot" width="600"/>
+  <img src="https://samuel-dev-rosy.vercel.app/projects/futureforge/homepage.png" alt="FutureForge Screenshot" width="600"/>
 </p>
 
 <h2>🚀 Live smarter. Learn sharper. Choose better.</h2>
@@ -56,16 +56,11 @@
 
 <pre>
 # Clone the repo
-git clone https://github.com/yourusername/futureforge.git
+git clone https://github.com/nukimoya/futureforge.git
 cd futureforge
 
 # Backend
 cd server
-npm install
-npm run dev
-
-# Frontend
-cd ../client
 npm install
 npm run dev
 </pre>
@@ -78,16 +73,16 @@ npm run dev
 
 <h3>🤝 Let’s Connect</h3>
 <ul>
-  <li>🌐 <a href="https://yourportfolio.dev" target="_blank">yourportfolio.dev</a></li>
-  <li>🐦 <a href="https://twitter.com/yourhandle" target="_blank">@yourhandle</a></li>
+  <li>🌐 <a href="https://samuel-dev-rosy.vercel.app/" target="_blank">samuel.dev</a></li>
+  <li>🐦 <a href="https://twitter.com/ayothemsft" target="_blank">@ayothemsft</a></li>
   <li>🔧 Contributions welcome — fork & PR 🙌</li>
 </ul>
 
 <h3 align="center">⭐ If you believe in the mission — star the repo!</h3>
 
 <p align="center">
-  <a href="https://github.com/yourusername/futureforge">
-    <img src="https://img.shields.io/github/stars/yourusername/futureforge?style=social" />
+  <a href="https://github.com/nukimoya/futureforge">
+    <img src="https://img.shields.io/github/stars/nukimoya/futureforge?style=social" />
   </a>
 </p>
 
