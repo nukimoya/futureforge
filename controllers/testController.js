@@ -52,18 +52,14 @@ const startTestSession = async (req, res) => {
     const userId = req.user.id;
 
     const existingSession = await TestSession.findOne({
-      where: {
-        userId,
-        completedAt: null
-      },
+      where: { userId, completedAt: null },
       order: [['startedAt', 'DESC']],
       transaction: t,
-      lock: t.LOCK.UPDATE // 🔒 lock rows to prevent race condition
+      lock: t.LOCK.UPDATE
     });
 
     if (existingSession) {
       await t.commit();
-      console.log(`[INFO] User ${userId} already has an open session: ${existingSession.id}`);
       return res.status(200).json({
         message: 'An existing test session was found.',
         sessionId: existingSession.id
@@ -74,7 +70,6 @@ const startTestSession = async (req, res) => {
     await t.commit();
     await logActivity(userId, 'test_started', { sessionId: newSession.id });
 
-    console.log(`[INFO] New test session created for user ${userId}: ${newSession.id}`);
     return res.status(201).json({
       message: 'New test session started.',
       sessionId: newSession.id
@@ -83,9 +78,7 @@ const startTestSession = async (req, res) => {
   } catch (err) {
     await t.rollback();
     console.error('[ERROR] Failed to start test session:', err);
-    return res.status(500).json({
-      error: 'Internal server error. Could not start test session.'
-    });
+    return res.status(500).json({ error: 'Could not start test session.' });
   }
 };
 
@@ -93,7 +86,6 @@ const submitAptitudeTest = async (req, res) => {
   const userId = req.user.id;
   const { sessionId, responses } = req.body;
 
-  // Validate input
   if (!Array.isArray(responses) || !sessionId) {
     return res.status(400).json({ error: 'Session ID and responses are required.' });
   }
@@ -101,7 +93,6 @@ const submitAptitudeTest = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    // 1. Validate session ownership and completion
     const session = await TestSession.findOne({
       where: { id: sessionId, userId },
       transaction
@@ -117,7 +108,6 @@ const submitAptitudeTest = async (req, res) => {
       return res.status(400).json({ error: 'This test session is already completed.' });
     }
 
-    // 2. Format and save responses
     const formattedResponses = responses.map(r => ({
       userId,
       testSessionId: sessionId,
@@ -127,40 +117,31 @@ const submitAptitudeTest = async (req, res) => {
 
     await Response.bulkCreate(formattedResponses, { transaction });
 
-    // 3. Update user flag
     await User.update(
       { hasTakenAssessment: true },
       { where: { id: userId }, transaction }
     );
 
-    // 4. Mark session as complete
     await TestSession.update(
       { completedAt: new Date() },
       { where: { id: sessionId }, transaction }
     );
+
     await logActivity(userId, 'test_completed', { sessionId: session.id });
 
-    // 5. Commit transaction before calling external AI
     await transaction.commit();
 
-    // 6. Prepare summaries for AI
     const userAnswers = responses.map(r => `Q: ${r.question?.trim()} A: ${r.answer?.trim()}`).join('\n');
     const personalityProfile = generatePersonalityProfile(responses);
     const interestSummary = generateInterestSummary(responses);
 
-    // 7. Generate career recommendations
     let recommendations = [];
     try {
-      recommendations = await getCareerRecommendationsFromGroq(
-        userAnswers,
-        personalityProfile,
-        interestSummary
-      );
+      recommendations = await getCareerRecommendationsFromGroq(userAnswers, personalityProfile, interestSummary);
     } catch (aiErr) {
       console.warn('[⚠️ AI ERROR] Failed to get recommendations:', aiErr.message);
     }
 
-    // 8. Save recommendations if any
     if (recommendations.length > 0) {
       await CareerRecommendation.bulkCreate(
         recommendations.map(rec => ({
@@ -182,7 +163,6 @@ const submitAptitudeTest = async (req, res) => {
       );
     }
 
-    // 9. Return final result
     return res.status(201).json({
       message: 'Test submitted successfully.',
       recommendations
@@ -387,19 +367,22 @@ const getUserStats = async (req, res) => {
     });
     
     let timeSinceLastTest = null;
-    
+
     if (lastSession?.startedAt) {
       const now = new Date();
       const startedAt = new Date(lastSession.startedAt);
       const diffMs = now - startedAt;
-    
+
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffDays = Math.floor(diffHours / 24);
-    
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
       if (diffDays >= 1) {
-        timeSinceLastTest = `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+        timeSinceLastTest = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+      } else if (diffHours >= 1) {
+        timeSinceLastTest = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
       } else {
-        timeSinceLastTest = `${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
+        timeSinceLastTest = `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
       }
     }
 

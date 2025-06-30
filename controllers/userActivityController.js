@@ -51,4 +51,29 @@ const getUserActivities = async (req, res) => {
   }
 };
 
-module.exports = { getUserActivities };
+const postUserActivity = async (req, res) => {
+  const userId = req.user.id;
+  const { type, metadata = {} } = req.body;
+
+  try {
+    if (!type) {
+      return res.status(400).json({ error: 'Activity type is required.' });
+    }
+
+    const newActivity = await UserActivity.create({
+      userId,
+      type,
+      metadata
+    });
+
+    res.status(201).json({
+      message: 'Activity logged successfully.',
+      activity: newActivity
+    });
+  } catch (err) {
+    console.error('❌ Failed to log user activity:', err);
+    res.status(500).json({ error: 'Failed to log activity.' });
+  }
+};
+
+module.exports = { getUserActivities, postUserActivity };
