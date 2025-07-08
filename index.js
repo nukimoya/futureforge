@@ -10,7 +10,14 @@ const setupAssociations = require('./config/associations')
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// Allow your frontend origin
+app.use(cors({
+  origin: 'https://futureforge-three.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(cookieParser());
 
