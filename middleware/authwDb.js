@@ -22,7 +22,7 @@ const authMiddleware = async (req, res, next) => {
     }
 
     const user = await User.findByPk(decoded.id, {
-      attributes: { exclude: ['password'] },
+        attributes: ['id', 'username', 'email', 'role', 'takentest'],
     });
 
     if (!user) {
