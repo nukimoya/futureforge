@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-module.exports = async function sendConfirmationEmail(to, code) {
+module.exports = async function sendConfirmationEmail(name, to, code) {
   const mailOptions = {
     from: 'FutureForge <no-reply@futureforge.ai>',
     to,
@@ -17,7 +17,7 @@ module.exports = async function sendConfirmationEmail(to, code) {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #f9f9f9; border: 1px solid #e0e0e0;">
         <h2 style="color: #2c3e50;">Welcome to FutureForge</h2>
-        <p>Dear User,</p>
+        <p>Dear ${name},</p>
         <p>Thank you for signing up with <strong>FutureForge</strong>. To complete your registration and ensure the security of your account, please verify your email address by entering the confirmation code below:</p>
         
         <div style="font-size: 24px; font-weight: bold; color: #2c3e50; background: #e8f5e9; padding: 10px 16px; border-radius: 6px; width: fit-content; margin: 16px 0;">

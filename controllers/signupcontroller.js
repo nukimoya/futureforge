@@ -45,7 +45,7 @@ const signupUser = async (req, res) => {
       created_at: new Date()
     });
 
-    await sendConfirmationEmail(trimmedEmail, confirmation_code);
+    await sendConfirmationEmail(trimmedUsername, trimmedEmail, confirmation_code);
 
     res.status(201).json({
       message: 'Account created. Please check your email to confirm your account.',
