@@ -11,9 +11,12 @@ dotenv.config();
 
 const app = express();
 
-// Allow your frontend origin
+// for koyeb
+app.set('trust proxy', 1);
+
+// Allowing the frontend origin
 app.use(cors({
-  origin: 'https://futureforge-three.vercel.app',
+  origin: 'https://futureforge-t5o7.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
@@ -30,7 +33,7 @@ app.get('/', (req, res) => {
 
 app.use("/", router);
 
-// Use this working solution - no path parameter
+//no path parameter
 app.use((req, res) => {
   res.status(404).json({ error: "No Page Found" });
 });
