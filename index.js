@@ -31,6 +31,10 @@ app.get('/', (req, res) => {
   res.send('FutureForge API running!');
 });
 
+app.get('/health', (req, res) => res.sendStatus(200));
+app.head('/health', (req, res) => res.sendStatus(200));
+
+
 app.use("/", router);
 
 //no path parameter
