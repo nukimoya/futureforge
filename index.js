@@ -16,7 +16,7 @@ app.set('trust proxy', 1);
 
 // Allowing the frontend origin
 app.use(cors({
-  origin: 'https://futureforge-t5o7.onrender.com',
+  origin: 'https://futureforge-8w4k.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
